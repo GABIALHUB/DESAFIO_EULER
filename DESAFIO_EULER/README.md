@@ -1,5 +1,7 @@
-# 🚀 NASA 1962: Desafío Euler en el Espacio
+# NASA 1962: Desafío Euler en el Espacio
+
 ### Simulación Numérica Interactiva y Análisis de Trayectorias de Ascenso
+
 **Asignatura:** Métodos Numéricos  
 **Tema:** Ecuaciones Diferenciales Ordinarias (EDO) de Primer Orden  
 **Modalidad:** Individual (20 / 20 Puntos)  
@@ -7,11 +9,12 @@
 
 ---
 
-## 🛰️ 1. Descripción del Proyecto
+## 1. Descripción del Proyecto
 
 Este repositorio contiene una **aplicación web interactiva de simulación física y numérica** que modela el despegue vertical de un cohete experimental de la NASA durante sus primeros 20 segundos de vuelo propulsado.
 
 La herramienta permite:
+
 1. **Configurar parámetros físicos en tiempo real:** Masa del cohete ($m$), empuje del motor ($T$), gravedad ($g$), arrastre aerodinámico lineal ($c$), tiempo de simulación y tamaño de paso temporal ($h$).
 2. **Ejecutar 3 algoritmos numéricos en simultáneo:**
    - **Método de Euler hacia adelante** (orden $O(h)$) - Algoritmo base.
@@ -25,7 +28,7 @@ La herramienta permite:
 
 ---
 
-## 📁 2. Estructura del Repositorio
+## 2. Estructura del Repositorio
 
 ```text
 desafio-euler-espacio/
@@ -40,18 +43,24 @@ desafio-euler-espacio/
 
 ---
 
-## 🧮 3. Modelo Matemático y Solución Analítica
+## 3. Modelo Matemático y Solución Analítica
 
 ### Sistema de EDOs
+
 A partir de la Segunda Ley de Newton ($\sum F_y = m \cdot a$):
+
 $$\frac{dv}{dt} = 5{,}19 - 0{,}1 v, \quad v(0) = 0\text{ m/s}$$
+
 $$\frac{dh}{dt} = v, \quad h(0) = 0\text{ m}$$
 
 ### Solución Analítica Exacta
+
 $$v(t) = 51{,}9 \left(1 - e^{-0{,}1 t}\right)$$
+
 $$h(t) = 51{,}9 t - 519 \left(1 - e^{-0{,}1 t}\right)$$
 
 ### Valores a $t = 20\text{ s}$ ($h = 2\text{ s}$)
+
 | Método | Velocidad $v(20)$ (m/s) | Error Vel. (m/s) | Altura $h(20)$ (m) | Error Altura (m) | Factor de Mejora vs Euler |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Euler ($O(h)$)** | $46{,}3273$ | $1{,}4512$ | $574{,}7272$ | $14{,}5118$ | $1\times$ (Base) |
@@ -61,22 +70,23 @@ $$h(t) = 51{,}9 t - 519 \left(1 - e^{-0{,}1 t}\right)$$
 
 ---
 
-## 💻 4. Cómo Ejecutar la Aplicación Localmente
+## 4. Cómo Ejecutar la Aplicación Localmente
 
 No se requiere instalar Node.js, Python ni servidores pesados. La aplicación está construida en **HTML5 puro, CSS3 y JavaScript moderno**.
 
 1. Clona o descarga esta carpeta.
 2. Abre el archivo `index.html` haciendo doble clic en él con cualquier navegador moderno (Google Chrome, Microsoft Edge, Firefox, Brave, Safari).
-3. ¡Listo! Todo el sistema interactivo se ejecutará de forma instantánea.
+3. El sistema interactivo se ejecutará de forma instantánea.
 
 ---
 
-## 🌐 5. Cómo Publicar en GitHub y Activar GitHub Pages (Gratis)
+## 5. Cómo Publicar en GitHub y Activar GitHub Pages (Gratis)
 
 Para obtener un enlace web público funcional para la entrega de la tarea:
 
 1. Crea un repositorio nuevo en tu cuenta de GitHub (por ejemplo, `desafio-euler-espacio`).
 2. En tu terminal o consola Git, ejecuta:
+
    ```bash
    git init
    git add .
@@ -85,17 +95,19 @@ Para obtener un enlace web público funcional para la entrega de la tarea:
    git remote add origin https://github.com/TU_USUARIO/desafio-euler-espacio.git
    git push -u origin main
    ```
+
 3. En la página de tu repositorio en GitHub:
    - Ve a **Settings** (Configuración) -> pestaña **Pages**.
    - En **Build and deployment** > **Source**, selecciona `Deploy from a branch`.
    - Selecciona la rama `main` y la carpeta `/(root)`.
    - Haz clic en **Save** (Guardar).
-4. En 1 minuto, GitHub generará tu enlace público:  
+4. En aproximadamente 1 minuto, GitHub generará tu enlace público:
+
    `https://TU_USUARIO.github.io/desafio-euler-espacio/`
 
 ---
 
-## 🎬 6. Entregables Incluidos en este Repositorio
+## 6. Entregables Incluidos en este Repositorio
 
 - [x] **Aplicación Web Funcional:** `index.html`, `style.css`, `simulation.js`.
 - [x] **Solución Analítica y EDOs:** Desarrollada paso a paso en `INFORME_DESAFIO_EULER.md` y dentro de la pestaña teórica de la aplicación.
