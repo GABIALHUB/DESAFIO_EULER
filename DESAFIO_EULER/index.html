@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Aeroespacial: Despegue Experimental y Métodos Numéricos</title>
+  
+  <!-- Tipografías de alta fidelidad -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Configuración e Integración de MathJax 3 para Renderizado Matemático LaTeX -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+  </script>
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+  </script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Hoja de Estilos Guindo, Negro y Blanco -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Barra Superior de Control de Misión -->
+  <header class="top-header">
+    <div class="header-brand">
+      <div class="brand-badge">🚀</div>
+      <div class="mission-title">
+        <h1>SISTEMA DE TELEMETRÍA Y SIMULACIÓN <span class="badge-tag badge-wine">MISIÓN MERCURY 1962</span></h1>
+        <p class="mission-sub">Modelado de Ascenso Vertical &bull; Comparativa de Métodos Numéricos frente a Solución Analítica</p>
+      </div>
+    </div>
+    
+    <div class="header-status">
+      <div class="telemetry-indicator">
+        <span class="indicator-dot"></span> SISTEMA ACTIVO
+      </div>
+      <div class="badge-tag badge-wine">
+        MÉTODOS NUMÉRICOS
+      </div>
+    </div>
+  </header>
+
+  <!-- Pestañas de Navegación -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" data-tab="tab-dashboard">
+      <span>📊</span> Simulador y Telemetría
+    </button>
+    <button class="tab-btn" data-tab="tab-theory">
+      <span>📐</span> Formulación y Solución Analítica
+    </button>
+    <button class="tab-btn" data-tab="tab-reflection">
+      <span>🌌</span> Análisis Físico y Reflexión Histórica
+    </button>
+  </nav>
+
+  <!-- ========================================================================= -->
+  <!-- PESTAÑA 1: DASHBOARD DE SIMULACIÓN Y TELEMETRÍA                           -->
+  <!-- ========================================================================= -->
+  <main class="tab-panel active" id="tab-dashboard">
+    
+    <!-- Barra Lateral: Controles y Parámetros -->
+    <aside class="control-sidebar">
+      
+      <!-- Presets Rápidos -->
+      <div class="card">
+        <div class="card-title">
+          <span>Configuraciones de Vuelo</span>
+          <span class="icon">⚙️</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.45rem;">
+          <button class="btn-secondary" id="preset-nasa-1962" style="font-size: 0.82rem; justify-content: flex-start;">
+            <span>🛰️</span> Configuración Estándar (h = 2.0 s)
+          </button>
+          <button class="btn-secondary" id="preset-high-precision" style="font-size: 0.82rem; justify-content: flex-start;">
+            <span>🎯</span> Alta Precisión (h = 0.25 s)
+          </button>
+          <button class="btn-secondary" id="preset-asteroid" style="font-size: 0.82rem; justify-content: flex-start;">
+            <span>☄️</span> Descenso Asteroide 2027
+          </button>
+        </div>
+      </div>
+
+      <!-- Parámetros del Cohete -->
+      <div class="card">
+        <div class="card-title">
+          <span>Parámetros Físicos</span>
+          <span class="icon">🔬</span>
+        </div>
+
+        <div class="form-group">
+          <label>Masa del Cohete (m): <span class="val-badge" id="val-m">1000 kg</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="input-m" value="1000" min="1" step="10">
+            <span class="unit">kg</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Empuje del Motor (T): <span class="val-badge" id="val-T">15000 N</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="input-T" value="15000" min="0" step="100">
+            <span class="unit">N</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Gravedad (g): <span class="val-badge" id="val-g">9.81 m/s²</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="input-g" value="9.81" min="0" step="0.01">
+            <span class="unit">m/s²</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Coef. Resistencia (c): <span class="val-badge" id="val-c">100 kg/s</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="input-c" value="100" min="0" step="5">
+            <span class="unit">kg/s</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tiempo de Simulación: <span class="val-badge" id="val-tMax">20 s</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="input-tMax" value="20" min="1" max="100" step="1">
+            <span class="unit">s</span>
+          </div>
+        </div>
+
+        <!-- Paso de Euler (h) -->
+        <div class="form-group">
+          <label>Paso de Integración (h): <span class="val-badge" id="val-h">2.0 s</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="input-h" value="2.0" min="0.05" max="5.0" step="0.05">
+            <span class="unit">s</span>
+          </div>
+          <div class="preset-grid">
+            <button class="preset-btn active" data-h="2.0">2.0s</button>
+            <button class="preset-btn" data-h="1.0">1.0s</button>
+            <button class="preset-btn" data-h="0.5">0.5s</button>
+            <button class="preset-btn" data-h="0.25">0.25s</button>
+            <button class="preset-btn" data-h="0.1">0.1s</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Algoritmos Evaluados -->
+      <div class="card">
+        <div class="card-title">
+          <span>Esquemas de Integración</span>
+          <span class="icon">📈</span>
+        </div>
+        <div class="methods-list">
+          <div class="method-item">
+            <div class="method-left">
+              <span class="method-color color-euler"></span>
+              <span>Método de Euler (Orden 1)</span>
+            </div>
+            <span class="badge-tag badge-wine">O(h)</span>
+          </div>
+          <div class="method-item">
+            <div class="method-left">
+              <span class="method-color color-heun"></span>
+              <span>Método de Heun (Orden 2)</span>
+            </div>
+            <span class="badge-tag" style="background: rgba(226,183,110,0.15); color: #e2b76e; border: 1px solid rgba(226,183,110,0.3);">O(h²)</span>
+          </div>
+          <div class="method-item">
+            <div class="method-left">
+              <span class="method-color color-rk4"></span>
+              <span>Runge-Kutta 4 (RK4)</span>
+            </div>
+            <span class="badge-tag" style="background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3);">O(h⁴)</span>
+          </div>
+          <div class="method-item">
+            <div class="method-left">
+              <span class="method-color color-exact"></span>
+              <span>Solución Analítica Exacta</span>
+            </div>
+            <span class="badge-tag" style="background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">Exacta</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Contenido Principal: Animación, KPIs, Gráficas y Tablas -->
+    <section class="dashboard-content">
+      
+      <!-- Criterio de Seguridad de Control de Vuelo -->
+      <div class="criteria-card">
+        <div class="criteria-info">
+          <div class="criteria-title">Control de Vuelo: Tolerancia Crítica de Precisión</div>
+          <div class="criteria-desc" id="mission-criteria-desc">
+            Evaluando divergencia acumulada entre aproximación numérica y trayectoria exacta...
+          </div>
+        </div>
+        <div class="criteria-badge badge-danger" id="mission-criteria-badge">
+          ALERTA: RIESGO CRÍTICO
+        </div>
+      </div>
+
+      <!-- Scorecards KPI a t = 20 s -->
+      <div class="kpi-grid">
+        <div class="kpi-card wine">
+          <div class="kpi-label">Velocidad Euler (t = 20 s)</div>
+          <div class="kpi-value" id="kpi-v-euler">46.3273 m/s</div>
+          <div class="kpi-sub" id="kpi-v-euler-err">Error: 1.4512 m/s (3.23%)</div>
+        </div>
+
+        <div class="kpi-card wine">
+          <div class="kpi-label">Altura Euler (t = 20 s)</div>
+          <div class="kpi-value" id="kpi-h-euler">574.73 m</div>
+          <div class="kpi-sub" id="kpi-h-euler-err">Error: 14.51 m (2.46%)</div>
+        </div>
+
+        <div class="kpi-card black">
+          <div class="kpi-label">Velocidad Exacta (t = 20 s)</div>
+          <div class="kpi-value" id="kpi-v-exact">44.8761 m/s</div>
+          <div class="kpi-sub">Solución diferencial cerrada</div>
+        </div>
+
+        <div class="kpi-card black">
+          <div class="kpi-label">Altura Exacta (t = 20 s)</div>
+          <div class="kpi-value" id="kpi-h-exact">589.24 m</div>
+          <div class="kpi-sub">Integral exacta del movimiento</div>
+        </div>
+
+        <div class="kpi-card gold">
+          <div class="kpi-label">Error RK4 en Altura</div>
+          <div class="kpi-value" id="kpi-rk4-err">0.0022 m</div>
+          <div class="kpi-sub" id="kpi-rk4-sub">RK4 es 6,554x más preciso que Euler</div>
+        </div>
+      </div>
+
+      <!-- Simulador Visual del Cohete y Cámara de Ascenso -->
+      <div class="sim-viewport-grid">
+        <div class="animation-panel">
+          <div class="canvas-container">
+            <canvas id="rocketCanvas"></canvas>
+            
+            <!-- HUD de Telemetría en Pantalla -->
+            <div class="canvas-overlay-hud">
+              <div><strong>TIEMPO T:</strong> <span id="hud-time">0.0 s</span></div>
+              <div style="color: #ff8ca3;"><strong>V. EULER:</strong> <span id="hud-v-euler">0.00 m/s</span></div>
+              <div style="color: #ffffff;"><strong>V. EXACTA:</strong> <span id="hud-v-exact">0.00 m/s</span></div>
+              <div style="color: #ff8ca3;"><strong>H. EULER:</strong> <span id="hud-h-euler">0.0 m</span></div>
+              <div style="color: #ffffff;"><strong>H. EXACTA:</strong> <span id="hud-h-exact">0.0 m</span></div>
+            </div>
+          </div>
+
+          <!-- Controles de Reproducción -->
+          <div class="canvas-controls">
+            <button class="btn-primary" id="btn-play-sim" style="flex: 1;">
+              <span class="icon">▶</span> Lanzar Cohete
+            </button>
+            <button class="btn-secondary" id="btn-reset-sim">
+              <span class="icon">↺</span> Reiniciar
+            </button>
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              <label style="font-size: 0.78rem; color: var(--text-muted);">Vel:</label>
+              <select id="speed-select" style="background: var(--bg-secondary); color: #ffffff; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.35rem; font-family: var(--font-mono); font-size: 0.76rem;">
+                <option value="1">1x</option>
+                <option value="2" selected>2x</option>
+                <option value="5">5x</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficas Superiores (Velocidad y Altura) -->
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Curva de Velocidad $v(t)$ vs Tiempo</h3>
+              <span class="badge-tag badge-wine">Euler vs Heun vs RK4 vs Analítica</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chartVelocity"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Curva de Altura $h(t)$ vs Tiempo</h3>
+              <span class="badge-tag badge-wine">Trayectoria Vertical de Ascenso</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chartAltitude"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficas Inferiores (Error en el Tiempo y Estudio de Convergencia) -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Evolución Temporal del Error Absoluto $|h_{\text{aprox}} - h_{\text{exact}}|$</h3>
+            <span class="badge-tag badge-danger">Divergencia Acumulada</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="chartErrors"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Estudio de Convergencia: Error en Altura vs Paso $h$</h3>
+            <span class="badge-tag badge-success">Comparativa de Órdenes $O(h)$, $O(h^2)$, $O(h^4)$</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="chartConvergence"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Telemetría e Iteraciones -->
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div>
+            <h3 style="font-size: 1.05rem; color: #ffffff; margin-bottom: 0.2rem;">Tabla de Telemetría e Iteraciones</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Comparativa numérica paso a paso con precisión de 4 decimales</p>
+          </div>
+          <button class="btn-secondary" id="btn-export-csv">
+            <span>📥</span> Exportar a Excel (CSV)
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="telemetry-table">
+            <thead>
+              <tr>
+                <th>Iter</th>
+                <th>$t$ (s)</th>
+                <th>$v_{\text{Euler}}$ (m/s)</th>
+                <th>$v_{\text{Heun}}$ (m/s)</th>
+                <th>$v_{\text{RK4}}$ (m/s)</th>
+                <th>$v_{\text{Exact}}$ (m/s)</th>
+                <th>$E_v$ (m/s)</th>
+                <th>$h_{\text{Euler}}$ (m)</th>
+                <th>$h_{\text{Heun}}$ (m)</th>
+                <th>$h_{\text{RK4}}$ (m)</th>
+                <th>$h_{\text{Exact}}$ (m)</th>
+                <th>$E_h$ (m)</th>
+              </tr>
+            </thead>
+            <tbody id="telemetryTableBody">
+              <!-- Renderizado dinámicamente por simulation.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- PESTAÑA 2: FORMULACIÓN MATEMÁTICA Y SOLUCIÓN ANALÍTICA                    -->
+  <!-- ========================================================================= -->
+  <section class="tab-panel document-container" id="tab-theory">
+    <div class="doc-sheet">
+      <h2>1. Planteamiento Físico y Modelo Matemático</h2>
+      <p>
+        Consideramos un vehículo experimental de lanzamiento de masa $m = 1.000\text{ kg}$ que despega verticalmente desde el reposo. Durante los primeros $20\text{ segundos}$ de vuelo propulsado, el vehículo está sujeto a tres fuerzas concurrentes a lo largo del eje vertical $y$:
+      </p>
+      <ul>
+        <li><strong>Fuerza de Empuje ($T$):</strong> Generada por los motores cohete, dirigida hacia arriba: $T = 15.000\text{ N}$.</li>
+        <li><strong>Fuerza Gravitatoria (Peso $P$):</strong> Dirigida hacia abajo: $P = m \cdot g = (1.000\text{ kg})(9{,}81\text{ m/s}^2) = 9.810\text{ N}$.</li>
+        <li><strong>Resistencia Aerodinámica ($F_d$):</strong> Oposición al movimiento proporcional a la velocidad: $F_d = c \cdot v = 100 \cdot v\text{ N}$.</li>
+      </ul>
+
+      <div class="math-card">
+        <div class="math-card-title">Segunda Ley de Newton</div>
+        $$\sum F_y = m \cdot a = m \frac{dv}{dt} = T - m \cdot g - c \cdot v$$
+        $$1.000 \frac{dv}{dt} = 15.000 - 9.810 - 100 v = 5.190 - 100 v$$
+      </div>
+
+      <p>Dividiendo toda la expresión entre la masa $m = 1.000\text{ kg}$, obtenemos el sistema de ecuaciones diferenciales acopladas de primer orden:</p>
+
+      <div class="math-card">
+        <div class="math-card-title">Sistema de Ecuaciones Diferenciales Ordinarias (EDO)</div>
+        $$\begin{cases}
+        \dfrac{dv}{dt} = 5{,}19 - 0{,}1 v, & v(0) = 0\text{ m/s}\\[10pt]
+        \dfrac{dh}{dt} = v, & h(0) = 0\text{ m}
+        \end{cases}$$
+      </div>
+
+      <h2>2. Deducción Rigurosa de la Solución Analítica</h2>
+      <p>
+        Para obtener la solución analítica exacta de la velocidad, reescribimos la ecuación diferencial en forma separable:
+      </p>
+      <div class="math-card">
+        <div class="math-card-title">Separación de Variables para la Velocidad</div>
+        $$\frac{dv}{dt} = -0{,}1 (v - 51{,}9) \implies \frac{dv}{v - 51{,}9} = -0{,}1 \, dt$$
+      </div>
+
+      <p>Integrando indefinidamente en ambos miembros:</p>
+      <div class="math-card">
+        $$\int \frac{dv}{v - 51{,}9} = \int -0{,}1 \, dt \implies \ln|v - 51{,}9| = -0{,}1 t + C$$
+        $$v(t) - 51{,}9 = A e^{-0{,}1 t}$$
+      </div>
+
+      <p>Aplicando la condición inicial de reposo $v(0) = 0$:</p>
+      <div class="math-card">
+        $$0 - 51{,}9 = A e^{0} \implies A = -51{,}9$$
+        $$\mathbf{v(t) = 51{,}9 \left(1 - e^{-0{,}1 t}\right)}$$
+      </div>
+
+      <p>
+        Donde la <strong>velocidad terminal de ascenso</strong> es $v_{\text{term}} = 51{,}9\text{ m/s}$, condición límite donde el empuje propulsor iguala exactamente a la suma del peso y la resistencia del aire ($15.000\text{ N} = 9.810\text{ N} + 100 \times 51{,}9\text{ N}$).
+      </p>
+
+      <h3>Integración Exacta de la Altura $h(t)$</h3>
+      <p>Dado que la velocidad es la derivada temporal de la posición ($v = \frac{dh}{dt}$), integramos en el intervalo $[0, t]$:</p>
+      <div class="math-card">
+        <div class="math-card-title">Solución Analítica de la Altura</div>
+        $$h(t) = \int_0^t v(u) \, du = \int_0^t 51{,}9 \left(1 - e^{-0{,}1 u}\right) du$$
+        $$h(t) = 51{,}9 \left[ u + \frac{e^{-0{,}1 u}}{0{,}1} \right]_0^t = 51{,}9 \left( t + 10 e^{-0{,}1 t} - 10 \right)$$
+        $$\mathbf{h(t) = 51{,}9 t - 519 \left(1 - e^{-0{,}1 t}\right)}$$
+      </div>
+
+      <h3>Evaluación Exacta a los 20 Segundos ($t = 20\text{ s}$)</h3>
+      <div class="math-card">
+        <div class="math-card-title">Valores Exactos Teóricos</div>
+        $$v(20) = 51{,}9 \left(1 - e^{-2}\right) \approx 51{,}9 (0{,}8646647) = \mathbf{44{,}8761\text{ m/s}}$$
+        $$h(20) = 51{,}9(20) - 519 \left(1 - e^{-2}\right) = 1.038 - 448{,}7610 = \mathbf{589{,}2390\text{ m}}$$
+      </div>
+
+      <h2>3. Algoritmos Numéricos Implementados</h2>
+      <h3>A) Método de Euler Progresivo (Orden $O(h)$)</h3>
+      <p>Aproxima la trayectoria linealizando mediante la pendiente al inicio de cada subintervalo:</p>
+      <div class="math-card">
+        $$v_{n+1} = v_n + h \cdot (5{,}19 - 0{,}1 v_n)$$
+        $$h_{n+1} = h_n + h \cdot v_n$$
+      </div>
+
+      <h3>B) Método de Heun / Predictor-Corrector (Orden $O(h^2)$)</h3>
+      <p>Esquema de dos etapas que promedia las pendientes en los dos extremos del paso:</p>
+      <div class="math-card">
+        $$\tilde{v}_{n+1} = v_n + h \cdot f(v_n), \quad \tilde{h}_{n+1} = h_n + h \cdot v_n \quad \text{[Predictor]}$$
+        $$v_{n+1} = v_n + \frac{h}{2} \left[ f(v_n) + f(\tilde{v}_{n+1}) \right] \quad \text{[Corrector]}$$
+        $$h_{n+1} = h_n + \frac{h}{2} \left[ v_n + \tilde{v}_{n+1} \right]$$
+      </div>
+
+      <h3>C) Método de Runge-Kutta de Cuarto Orden - RK4 (Orden $O(h^4)$)</h3>
+      <p>
+        Evalúa cuatro pendientes intermedias ponderadas ($\vec{k}_1, \vec{k}_2, \vec{k}_3, \vec{k}_4$), cancelando términos de Taylor hasta el orden $h^4$. Para el mismo paso $h = 2\text{ s}$, reduce el error en altura de $14{,}51\text{ m}$ (Euler) a tan solo <strong>$0{,}0022\text{ m}$</strong> (RK4), logrando una precisión <strong>6.554 veces superior</strong>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- PESTAÑA 3: ANÁLISIS FÍSICO Y REFLEXIÓN HISTÓRICA                          -->
+  <!-- ========================================================================= -->
+  <section class="tab-panel document-container" id="tab-reflection">
+    <div class="doc-sheet">
+      <h2>Reflexión Crítica: Las Matemáticas en la Era Espacial</h2>
+      
+      <div class="quote-elegant">
+        "Las computadoras pueden fallar en la programación o en el redondeo binario. Si ella dice que los números están correctos, entonces estoy listo para ir."
+        <span class="quote-author">&mdash; John Glenn, astronauta del Proyecto Mercury (misión <em>Friendship 7</em>, 1962), refiriéndose a Katherine Johnson.</span>
+      </div>
+
+      <h3>1. ¿Por qué era importante verificar los cálculos antes de enviar astronautas al espacio?</h3>
+      <p>
+        En 1962, durante el primer vuelo orbital tripulado de Estados Unidos, una cápsula espacial se desplazaba a más de $28.000\text{ km/h}$. En estas condiciones extremas, una desviación de apenas unos pocos metros por segundo en la velocidad de inserción o una fracción de grado en el ángulo de reentrada provocaría consecuencias mortales: si el ángulo era demasiado plano, la cápsula rebotaría en las capas densas de la atmósfera quedando a la deriva en el vacío; si era excesivamente empinado, la fricción térmica sobrecargaría el escudo térmico, incinerando el vehículo. Dado que las computadoras electrónicas IBM 7090 de la época sufrían caídas de tensión y errores en el redondeo de punto flotante, la verificación manual rigurosa de Katherine Johnson representaba la última garantía de supervivencia para la tripulación.
+      </p>
+
+      <h3>2. ¿Qué riesgos existirían al utilizar un tamaño de paso demasiado grande?</h3>
+      <p>
+        En nuestra simulación, utilizar un paso de $h = 2\text{ s}$ genera un error acumulado de <strong>$14{,}51\text{ metros}$</strong> en apenas 20 segundos de vuelo vertical. Si el paso de integración es excesivo en un vuelo real:
+      </p>
+      <ul>
+        <li><strong>Inestabilidad y divergencia numérica:</strong> El algoritmo puede inducir oscilaciones no físicas o divergir hacia valores infinitos.</li>
+        <li><strong>Subestimación de cargas dinámicas:</strong> Se pueden obviar picos de presión dinámica máxima ($Max\ Q$) que comprometen la estructura física de la nave.</li>
+        <li><strong>Desvío del punto de amarizaje:</strong> Un error de pocos metros en el despegue se transforma en una desviación de decenas o cientos de kilómetros en el punto de rescate en el océano.</li>
+      </ul>
+
+      <h3>3. ¿Por qué una aproximación puede parecer razonable y aun así acumular errores importantes?</h3>
+      <p>
+        El método de Euler comete un <em>error de truncamiento local</em> proporcional a $O(h^2)$ en cada iteración. En un único paso aislado, la discrepancia es prácticamente inapreciable en una gráfica. Sin embargo, las ecuaciones del movimiento son recursivas: <strong>el resultado del paso actual constituye la condición inicial del paso siguiente</strong>. Al integrar a lo largo del tiempo, los pequeños errores locales se acumulan sistemáticamente originando un <em>error global</em> de orden $O(h)$. Así, una simulación puede lucir visualmente coherente mientras cuantitativamente difiere de la realidad por un margen peligroso.
+      </p>
+
+      <h3>4. ¿Qué variables reales del lanzamiento no fueron consideradas en nuestro modelo?</h3>
+      <p>
+        El modelo analítico escolar asume coeficientes ideales constantes. En un lanzamiento aeroespacial real intervienen factores dinámicos más complejos:
+      </p>
+      <ul>
+        <li><strong>Masa variable por consumo de propelente:</strong> Los cohetes queman toneladas de combustible por segundo, reduciendo su masa ($m(t) = m_0 - \dot{m}t$) e incrementando drásticamente la aceleración conforme avanza el ascenso (Ecuación del Cohete de Tsiolkovsky).</li>
+        <li><strong>Densidad atmosférica decreciente:</strong> La densidad decae exponencialmente con la altura ($\rho(h) = \rho_0 e^{-h/H}$), por lo que el arrastre disminuye considerablemente al ganar altitud.</li>
+        <li><strong>Resistencia aerodinámica no lineal cuadrática:</strong> A velocidades transónicas y supersónicas, el arrastre es proporcional a $v^2$ ($F_d = \frac{1}{2}\rho C_d A v^2$).</li>
+        <li><strong>Variación de la gravedad con la altura y fuerza de Coriolis:</strong> $g(h) = g_0 \left(\frac{R_T}{R_T + h}\right)^2$ y la rotación terrestre demandan simulaciones tridimensionales en 6 grados de libertad (6-DOF).</li>
+      </ul>
+
+      <h3>5. ¿Por qué el cálculo de una trayectoria lunar requiere un modelo mucho más complejo que el ascenso vertical?</h3>
+      <p>
+        El ascenso vertical es un problema unidimensional con un campo gravitacional uniforme. En cambio, una misión hacia la Luna (como el Programa Apolo de 1969) corresponde al <strong>Problema de los Tres Cuerpos Restringido</strong> (Tierra, Luna y Nave Espacial). Este sistema carece de una solución analítica cerrada en funciones elementales y es intrínsecamente no lineal y caótico. Exige necesariamente el empleo de métodos numéricos avanzados de paso adaptativo (como Runge-Kutta-Fehlberg RKF45) para integrar trayectorias en marcos de referencia no inerciales rotatorios, inyecciones translunares (TLI) y maniobras de retorno libre.
+      </p>
+    </div>
+  </section>
+
+  <!-- Script Principal de la Simulación y Navegación -->
+  <script src="simulation.js"></script>
+</body>
+</html>
